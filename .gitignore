@@ -163,3 +163,4 @@ cython_debug/
 
 dataset/36_TrainingData_process/*
 dataset/36_TrainingData_raw/*
+model_pth/
