@@ -17,7 +17,7 @@ import math
 #         return x + self.pe[:x.size(0), :]
 
 class TransformerModel(nn.Module):
-    def __init__(self, src_input_dim=18, tgt_input_dim=1, d_model=512, nhead=16, num_encoder_layers=15, num_decoder_layers=15, dim_feedforward=512, dropout=0.1):
+    def __init__(self, src_input_dim=18, tgt_input_dim=1, d_model=512, nhead=16, num_encoder_layers=5, num_decoder_layers=5, dim_feedforward=512, dropout=0.1):
         super(TransformerModel, self).__init__()
         
         # Positional encoding
@@ -33,7 +33,7 @@ class TransformerModel(nn.Module):
         # Output layer to transform model output to target feature dimension
         self.fc_out = nn.Linear(d_model, tgt_input_dim)
 
-    def forward(self, src, tgt, src_mask=None, tgt_mask=None):
+    def forward(self, src, tgt, tgt_mask=None):
         # Apply separate input layers to `src` and `tgt`
         src = self.fc_in_src(src)
         tgt = self.fc_in_tgt(tgt)
