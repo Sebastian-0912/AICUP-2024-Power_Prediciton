@@ -41,24 +41,24 @@ def test_model(model: TransformerModel, dataloader: DataLoader):
             # Store predictions and actual values for evaluation
             predictions.append(tgt_input[:, 12:, :].cpu().numpy())  # Predicted last 48 timesteps
             actuals.append(tgt_expected.cpu().numpy())
-
+            
     return np.concatenate(predictions, axis=0), np.concatenate(actuals, axis=0)
 
 for location_id in range(1,18):
-  model_path = f"./model_pth/location_{location_id}/location_{location_id}_epoch_1000.pth"
+  model_path = f"./model_pth/v3/location_{location_id}/L_{location_id}_ep_2000_loss_0.019493.pth"
   data_path = f"./dataset/36_TrainingData_interpolation_process/L{location_id}_Train_resampled.csv"
   test_dataset = SolarPowerDataset(data_path)
   test_loader = DataLoader(test_dataset, batch_size=75, shuffle=False)
 
   # Initialize a new model for each location
   model = TransformerModel(
-      src_input_dim=18,
+      src_input_dim=12,
       tgt_input_dim=1,
-      d_model=512,
+      d_model=128,
       nhead=8,
       num_encoder_layers=5,
       num_decoder_layers=5,
-      dim_feedforward=512,
+      dim_feedforward=128,
       dropout=0.1
   )
 
@@ -77,7 +77,8 @@ for location_id in range(1,18):
   # Reshape back for evaluation
   predictions = predictions.reshape(-1, 48)  # (batch_size, 48)
   actuals = actuals.reshape(-1, 48)
-
+  print(predictions[0])
+  print(actuals[0])
   mae = mean_absolute_error(actuals.flatten(), predictions.flatten())
 
   print(f"Test MAE: {mae:.4f}")

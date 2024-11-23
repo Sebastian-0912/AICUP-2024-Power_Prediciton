@@ -32,10 +32,8 @@ class SolarPowerDataset(Dataset):
     def __getitem__(self, idx):
         start_idx = self.valid_data_indices[idx]
         X = self.data.iloc[start_idx:start_idx + self.lookback][['WindSpeed(m/s)', 'Pressure(hpa)',
-       'Temperature(°C)', 'Humidity(%)', 'Sunlight(Lux)', 'Power(mW)', 'Hour',
-       'Minute', 'Month', 'Hour_sin', 'Hour_cos', 'Minute_sin', 'Minute_cos',
-       'Month_sin', 'Month_cos', 'DayOfYear', 'DayOfYear_sin',
-       'DayOfYear_cos']].values
+       'Temperature(°C)', 'Humidity(%)', 'Sunlight(Lux)', 'Power(mW)', 'Hour_sin', 'Hour_cos', 'Minute_sin', 'Minute_cos',
+       'Month_sin', 'Month_cos']].values
         Y = self.data.iloc[start_idx + self.lookback - 12 : start_idx + self.lookback + self.predict_ahead][['Power(mW)']].values
         return torch.tensor(X, dtype=torch.float32), torch.tensor(Y, dtype=torch.float32)
     

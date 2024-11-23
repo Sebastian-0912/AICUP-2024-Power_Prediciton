@@ -8,10 +8,43 @@ from tqdm import tqdm
 import os
 from sklearn.preprocessing import MinMaxScaler
 from utils.mask import generate_tgt_mask
-from torch.optim.lr_scheduler import StepLR
+
+class TransformerModel(nn.Module):
+    def __init__(self, src_input_dim=18, tgt_input_dim=1, d_model=512, nhead=16, num_encoder_layers=5, num_decoder_layers=5, dim_feedforward=512, dropout=0.1):
+        super(TransformerModel, self).__init__()
+        
+        # Positional encoding
+        # self.pos_encoder = PositionalEncoding(d_model)
+        
+        # Transformer layers
+        self.transformer = nn.Transformer(d_model, nhead, num_encoder_layers, num_decoder_layers, dim_feedforward, dropout, batch_first=True)
+        
+        # Separate input layers for `src` and `tgt`
+        self.fc_in_src = nn.Linear(src_input_dim, d_model)
+        self.fc_in_tgt = nn.Linear(tgt_input_dim, d_model)
+        
+        # Output layer to transform model output to target feature dimension
+        self.fc_out = nn.Linear(d_model, tgt_input_dim)
+
+    def forward(self, src, tgt, tgt_mask=None):
+        # Apply separate input layers to `src` and `tgt`
+        src = self.fc_in_src(src)
+        tgt = self.fc_in_tgt(tgt)
+        
+        # # Apply positional encoding
+        # src = self.pos_encoder(src)
+        # tgt = self.pos_encoder(tgt)
+        
+        # Pass through Transformer
+        output = self.transformer(src, tgt, tgt_mask=tgt_mask)
+        
+        # Apply final output layer
+        output = self.fc_out(output)
+        
+        return output
 
 # Directory to save model checkpoints
-checkpoint_dir = "./model_pth/v3/"
+checkpoint_dir = "./model_pth/"
 
 # Function to train the model
 def train_model(model:TransformerModel, dataloader:DataLoader, scaler:MinMaxScaler, location_id, num_epochs=5, learning_rate=1e-4, model_pth=False):
@@ -22,12 +55,9 @@ def train_model(model:TransformerModel, dataloader:DataLoader, scaler:MinMaxScal
     
     model.to(device)
     
-    criterion = nn.L1Loss()
-    # criterion = nn.MSELoss()
+    # criterion = nn.L1Loss()
+    criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    # Add a learning rate scheduler
-    scheduler = StepLR(optimizer, step_size=1000, gamma=0.5)  # Reduce LR every 10 epochs by a factor of 0.5
-    
     model.train()
 
     for epoch in range(1, num_epochs + 1):
@@ -56,16 +86,13 @@ def train_model(model:TransformerModel, dataloader:DataLoader, scaler:MinMaxScal
         # Print average loss per epoch
         avg_loss = total_loss / len(dataloader)
         print(f"Location {location_id} | Epoch {epoch} | Loss: {avg_loss:.4f}")
-    
+
         # Save checkpoint every 100 epochs
         if epoch % 200 == 0:
-            checkpoint_path = os.path.join(checkpoint_dir, f"location_{location_id}", f"L_{location_id}_ep_{epoch}_loss_{avg_loss:.6f}.pth")
+            checkpoint_path = os.path.join(checkpoint_dir, f"location_{location_id}", f"location_{location_id}_epoch_{epoch}.pth")
             torch.save(model.state_dict(), checkpoint_path)
             print(f"Checkpoint saved for Location {location_id} at epoch {epoch}.")
-            
-     # Step the scheduler after each epoch
-    scheduler.step()
-    
+
 # Loop over each location to train a model for each
 for location_id in range(1, 18):  # Assuming location IDs are 1 through 17
     print(f"\nTraining model for Location {location_id}")
@@ -80,15 +107,15 @@ for location_id in range(1, 18):  # Assuming location IDs are 1 through 17
     
     # Initialize a new model for each location
     model = TransformerModel(
-        src_input_dim=12,
+        src_input_dim=18,
         tgt_input_dim=1,
-        d_model=128,
+        d_model=512,
         nhead=8,
         num_encoder_layers=5,
         num_decoder_layers=5,
-        dim_feedforward=128,
+        dim_feedforward=512,
         dropout=0.1
     )
     
     # Train the model
-    train_model(model, train_loader, dataset.scaler, location_id=location_id, num_epochs=2000, learning_rate=1e-4)
+    train_model(model, train_loader, dataset.scaler, location_id=location_id, num_epochs=1000, learning_rate=1e-4)
