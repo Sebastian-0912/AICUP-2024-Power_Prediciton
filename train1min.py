@@ -11,7 +11,7 @@ from utils.mask import generate_tgt_mask
 from torch.optim.lr_scheduler import StepLR
 
 # Directory to save model checkpoints
-checkpoint_dir = "./model_pth/5min/"
+checkpoint_dir = "./model_pth/1min/"
 
 # Function to train the model
 def train_model(model:TransformerModel, dataloader:DataLoader, scaler:MinMaxScaler, location_id, num_epochs=5, learning_rate=1e-4, model_pth=False):
@@ -72,9 +72,9 @@ for location_id in range(1, 18):  # Assuming location IDs are 1 through 17
     os.makedirs(os.path.join(checkpoint_dir, f"location_{location_id}") , exist_ok=True)
     
     # Load dataset specific to the current location
-    dataset = SolarPowerDataset(
+    dataset = SolarPowerDataset1min(
         # data_path=f"/home/sebastian/Desktop/AICUP-2024-Power_Prediciton/dataset/36_TrainingData_process/L{location_id}_Train_resampled.csv"
-        data_path=f"/home/sebastian/Desktop/AICUP-2024-Power_Prediciton/dataset/36_TrainingData_interpolation_process/L{location_id}_Train_resampled.csv"
+        data_path=f"/home/sebastian/Desktop/AICUP-2024-Power_Prediciton/dataset/36_TrainingData_interpolation_1min/L{location_id}_Train_resampled.csv"
     )
     train_loader = DataLoader(dataset, batch_size=5, shuffle=True)
     
