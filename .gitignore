@@ -165,4 +165,5 @@ dataset/36_TrainingData_process/*
 dataset/36_TrainingData_raw/*
 dataset/36_TrainingData_interpolation/*
 dataset/36_TrainingData_interpolation_process/*
+dataset/36_TrainingData_interpolation_5min/*
 model_pth/
