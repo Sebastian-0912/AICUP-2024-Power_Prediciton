@@ -19,12 +19,15 @@ def test_model(model: TransformerModel, dataloader: DataLoader):
     actuals = []
 
     with torch.no_grad():
+        total_loss = 0
         for X, Y in tqdm(dataloader, desc="Testing"):
             # Move data to device
             src = X.to(device)  # Shape: (batch_size, 72, 18)
             tgt_known = Y[:, :120, :].to(device)  # First 120 time steps of target (batch_size, 120, 1)
             tgt_expected = Y[:, 120:, :].to(device)  # Remaining 480 time steps for evaluation (batch_size, 480, 1)
 
+            criterion = nn.L1Loss()
+            
             # Initialize target input for decoder
             tgt_input = tgt_known  # Start with the known first 12 steps
 
@@ -39,17 +42,22 @@ def test_model(model: TransformerModel, dataloader: DataLoader):
                 tgt_input = torch.cat([tgt_input, next_step], dim=1)  # Shape: (batch_size, current_seq_len + 1, 1)
                 # print(tgt_input.shape)
             # Store predictions and actual values for evaluation
+            
+            loss = criterion(tgt_input[:, 120:, :] , tgt_expected)
+            total_loss += loss.item()
+            
+            
             predictions.append(tgt_input[:, 120:, :].cpu().numpy())  # Predicted last 48 timesteps
             actuals.append(tgt_expected.cpu().numpy())
-            
+        print(total_loss/len(dataloader))
     return np.concatenate(predictions, axis=0), np.concatenate(actuals, axis=0)
 
 for location_id in range(1,18):
-  model_path = f"./model_pth/1min/location_{location_id}/L_{location_id}_ep_1800_loss_0.016697.pth"
+  model_path = f"./model_pth/1min/location_{location_id}/L_{location_id}_ep_1000_loss_0.019383.pth"
   data_path = f"./dataset/36_TrainingData_interpolation_1min/L{location_id}_Train_resampled.csv"
   test_dataset = SolarPowerDataset1min(data_path)
   test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
-
+  
   # Initialize a new model for each location
   model = TransformerModel(
       src_input_dim=12,
@@ -68,6 +76,11 @@ for location_id in range(1,18):
   
   print(predictions.shape)
   print(actuals.shape)
+  
+  mae = mean_absolute_error(actuals.flatten(), predictions.flatten())
+
+  print(f"Test MAE: {mae:.4f}")
+  
   # Reshape predictions and actuals to match the scaler's input format
   predictions = predictions.reshape(-1, 1)  # (batch_size * time_steps, 1)
   actuals = actuals.reshape(-1, 1)
@@ -79,8 +92,8 @@ for location_id in range(1,18):
   # Reshape back for evaluation
   predictions = predictions.reshape(-1, 480)  # (batch_size, 48)
   actuals = actuals.reshape(-1, 480)
-#   print(predictions[0])
-#   print(actuals[0])
+  print(predictions[0])
+  print(actuals[0])
   mae = mean_absolute_error(actuals.flatten(), predictions.flatten())
 
   print(f"Test MAE: {mae:.4f}")
