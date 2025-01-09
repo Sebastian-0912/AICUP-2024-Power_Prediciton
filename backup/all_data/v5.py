@@ -25,7 +25,7 @@ def train_model(model:TransformerModel, dataloader:DataLoader, num_epochs=5, lea
     # criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     # Add a learning rate scheduler
-    scheduler = StepLR(optimizer, step_size=100, gamma=0.5)  # Reduce LR every 10 epochs by a factor of 0.5
+    scheduler = StepLR(optimizer, step_size=400, gamma=0.5)  # Reduce LR every 10 epochs by a factor of 0.5
     
     model.train()
     for epoch in range(1, num_epochs + 1):
@@ -76,11 +76,11 @@ train_loader = DataLoader(dataset, batch_size=16, shuffle=True)
 model = TransformerModel(
     src_input_dim=12,
     tgt_input_dim=1,
-    d_model=256,
+    d_model=128,
     nhead=8,
     num_encoder_layers=5,
     num_decoder_layers=5,
-    dim_feedforward=256,
+    dim_feedforward=128,
     dropout=0.1
 )
 
